@@ -22,7 +22,6 @@ const std::vector<std::vector<bool>>(&Grid::getGrid() const) {
 bool Grid::reachedBottom(const Block &block) {
 	auto cells = block.getCells();
 	array<array<int, 2>, 4> cells_n = *cells;
-
 	for (int i = 0; i < 4; i++) {
 		cells_n[i][1] += 1;
 	}
