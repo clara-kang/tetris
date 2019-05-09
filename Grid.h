@@ -17,6 +17,7 @@ public:
 	bool collide(const Block& block);
 	void fillGrid(const Block& block);
 	const std::vector<std::vector<bool>>(&getGrid() const);
+	void clearRow();
 private:
 	bool collide(const array<array<int, 2>, 4> cells);
 	void resetGrid();

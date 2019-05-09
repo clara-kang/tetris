@@ -9,9 +9,9 @@ array<int, 2> operator+(const array<int, 2>& lhs, const array<int, 2>& rhs) {
 }
 
 void Grid::resetGrid() {
-	std::vector<bool> col(height, false);
-	for (int i = 0; i < width; i++) {
-		grid.push_back(col);
+	std::vector<bool> row(width, false);
+	for (int i = 0; i < height; i++) {
+		grid.push_back(row);
 	}
 }
 
@@ -26,18 +26,7 @@ bool Grid::reachedBottom(const Block &block) {
 	for (int i = 0; i < 4; i++) {
 		cells_n[i][1] += 1;
 	}
-	for_each(cells->begin(), cells->end(), [](array<int, 2> c) {cout << c[0] << ", " << c[1] << endl; });
-	cout << endl;
-	for_each(cells_n.begin(), cells_n.end(), [](array<int, 2> c) {cout << c[0] << ", " << c[1] << endl; });
-	for (int i = 0; i < 4; i++) {
-		array<int, 2> cell = { { (*cells)[i][0], (*cells)[i][1] + 1} };
-		if (cell[1] >= height) {
-			return true;
-		} else if (grid[cell[0]][cell[1]]) {
-			return true;
-		}
-	}
-	return false;
+	return collide(cells_n);
 }
 
 bool Grid::collide(const Block& block) {
@@ -51,7 +40,7 @@ bool Grid::collide(const array<array<int, 2>, 4> cells) {
 		if (cell[1] >= height || cell[1] < 0 || cell[0] >= width || cell[0] < 0) {
 			return true;
 		}
-		else if (grid[cell[0]][cell[1]]) {
+		else if (grid[cell[1]][cell[0]]) {
 			return true;
 		}
 	}
@@ -61,6 +50,18 @@ bool Grid::collide(const array<array<int, 2>, 4> cells) {
 void Grid::fillGrid(const Block& block) {
 	auto cells = block.getCells();
 	for (array<int, 2> cell : *cells) {
-		grid[cell[0]][cell[1]] = true;
+		grid[cell[1]][cell[0]] = true;
+	}
+}
+
+void Grid::clearRow() {
+	vector<bool> true_v = vector<bool>(width, true);
+	vector<bool> false_v = vector<bool>(width, false);
+	for (int i = 0; i < height; i++) {
+		if (grid[i] == true_v) {
+			cout << "clear row : " << i << endl;
+			grid.erase(grid.begin() + i);
+			grid.insert(grid.begin(), false_v);
+		}
 	}
 }

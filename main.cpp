@@ -60,7 +60,7 @@ void drawGrid(sf::RenderWindow &window, Grid &grid) {
 	auto &grid_fills = grid.getGrid();
 	for (int i = 0; i < grid_w; i++) {
 		for (int j = 0; j < grid_h; j++) {
-			if (grid_fills[i][j]) {
+			if (grid_fills[j][i]) {
 				drawCell(window, i, j);
 			}
 		}
@@ -115,6 +115,7 @@ int main()
 			newBlock->moveDown();
 			if (grid.reachedBottom(*newBlock)) {
 				grid.fillGrid(*newBlock);
+				grid.clearRow();
 				delete newBlock;
 				newBlock = new BlockType1(grid.width / 2, 0, grid_w, grid_h);
 			};
@@ -122,8 +123,8 @@ int main()
 		}
 		window.clear();
 		drawBlock(window, *newBlock);
-		drawGridLines(window);
 		drawGrid(window, grid);
+		drawGridLines(window);
 		window.display();
 
 	}
