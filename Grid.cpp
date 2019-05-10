@@ -69,3 +69,8 @@ void Grid::clearRow() {
 		}
 	}
 }
+
+void Grid::clearGrid() {
+	grid = std::vector<std::vector<bool>>();
+	resetGrid();
+}

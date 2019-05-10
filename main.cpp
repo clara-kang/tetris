@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <string>
 #include "block.h"
 #include "Grid.h"
 
@@ -9,11 +10,15 @@ const int win_w = 300;
 const int win_h = 600;
 const int cell_w = win_w / grid_w;
 const int cell_h = win_h / grid_h;
-
+const int button_x = 115;
+const int button_y = 300;
+const int button_w = 70;
+const int button_h = 30;
 using namespace std;
 
 int level = 1;
 int ground_y = 0;
+bool gameover = true;
 Block *newBlock;
 Block *shadowBlock;
 Grid grid(grid_w, grid_h);
@@ -90,6 +95,23 @@ void drawGrid(sf::RenderWindow &window, Grid &grid) {
 	}
 }
 
+void drawButton(sf::RenderWindow &window, string words) {
+	sf::Text text;
+	text.setString("PLAYAGAIN");
+	text.setCharacterSize(24);
+	text.setFillColor(sf::Color::White);
+	text.setStyle(sf::Text::Bold);
+
+	sf::RectangleShape shape(sf::Vector2f(button_w, button_h));
+	shape.setFillColor(sf::Color::Transparent);
+	shape.setOutlineColor(sf::Color::White);
+	shape.setOutlineThickness(2.f);
+	shape.setPosition(button_x, button_y);
+	window.draw(shape);
+	window.draw(text);
+
+}
+
 void generateNewBlock() {
 	int block_type = 1 + rand() % 2;
 	cout << "block_type: " << block_type << endl;
@@ -115,16 +137,42 @@ void blockToGrid() {
 	delete newBlock;
 	delete shadowBlock;
 	generateNewBlock();
+	// grid overflow, game over
+	if (grid.collide(*newBlock)) {
+ 		cout << "game over!" << endl;
+		gameover = true;
+	}
 }
 
+void pollStandbyEvent(sf::RenderWindow &window) {
+	sf::Event event;
+	while (window.pollEvent(event))
+	{
+		if (event.type == sf::Event::Closed) {
+			window.close();
+		}
+		else if (event.type == sf::Event::MouseButtonPressed) {
+			sf::Vector2i position = sf::Mouse::getPosition(window);
+			cout << "position.x: " << position.x << ", position.y: " << position.y << endl;
 
+			if (position.x >= button_x && position.x <= button_x + button_w &&
+				position.y >= button_y && position.y <= button_y + button_h) {
+				grid.clearGrid();
+				generateNewBlock();
+				ground_y = grid.getGroundY(*newBlock);
+				shadowBlock->setPos(newBlock->getX(), ground_y);
+				gameover = false;
+			}
+		}
+	}
+}
 void pollEvent(sf::RenderWindow &window) {
 	sf::Event event;
 	while (window.pollEvent(event))
 	{
 		if (event.type == sf::Event::Closed)
 			window.close();
-		if (event.type == sf::Event::KeyPressed) {
+		else if (event.type == sf::Event::KeyPressed) {
 			cout << "key pressed" << endl;
 			if (event.key.code == sf::Keyboard::R) {
 				newBlock->rotateCw();
@@ -169,25 +217,32 @@ int main()
 	ground_y = grid.getGroundY(*newBlock);
 	shadowBlock->setPos(newBlock->getX(), ground_y);
 
-	bool reachedBottom = false;
 	while (window.isOpen()) {
-		pollEvent(window);
-		elapsed = clock.getElapsedTime();
-		if (elapsed.asSeconds() >= getLevelRate(level)) {
-			newBlock->moveDown();
-			// reach ground
-			if (grid.collide(*newBlock)) {
-				newBlock->moveUp();
-				blockToGrid();
-			};
-			clock.restart();
+		if (!gameover) {
+			pollEvent(window);
+			elapsed = clock.getElapsedTime();
+			if (elapsed.asSeconds() >= getLevelRate(level)) {
+				newBlock->moveDown();
+				// reach ground
+				if (grid.collide(*newBlock)) {
+					newBlock->moveUp();
+					blockToGrid();
+				};
+				clock.restart();
+			}
+			window.clear();
+			drawBlock(window, *newBlock);
+			drawShadowBlock(window, *shadowBlock);
+			drawGrid(window, grid);
+			drawGridLines(window);
+			window.display();
 		}
-		window.clear();
-		drawBlock(window, *newBlock);
-		drawShadowBlock(window, *shadowBlock);
-		drawGrid(window, grid);
-		drawGridLines(window);
-		window.display();
+		else {
+ 			pollStandbyEvent(window);
+			window.clear();
+			drawButton(window, "PLAY AGAIN");
+			window.display();
+		}
 	}
 
 	return 0;
