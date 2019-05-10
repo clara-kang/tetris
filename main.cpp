@@ -112,8 +112,11 @@ void drawButton(sf::RenderWindow &window, string words) {
 
 }
 
+int block_type = 0;
+
 void generateNewBlock() {
-	int block_type = 1 + rand() % 2;
+	//int block_type = 1 + rand() % 7;
+	block_type = (block_type) % 7 + 1;
 	cout << "block_type: " << block_type << endl;
 	switch (block_type)
 	{
@@ -124,6 +127,26 @@ void generateNewBlock() {
 	case 2:
 		newBlock = new BlockType2(grid.width / 2, 0);
 		shadowBlock = new BlockType2(grid.width / 2, 0);
+		break;
+	case 3:
+		newBlock = new BlockType3(grid.width / 2, 0);
+		shadowBlock = new BlockType3(grid.width / 2, 0);
+		break;
+	case 4:
+		newBlock = new BlockType4(grid.width / 2, 0);
+		shadowBlock = new BlockType4(grid.width / 2, 0);
+		break;
+	case 5:
+		newBlock = new BlockType5(grid.width / 2, 0);
+		shadowBlock = new BlockType5(grid.width / 2, 0);
+		break;
+	case 6:
+		newBlock = new BlockType6(grid.width / 2, 0);
+		shadowBlock = new BlockType6(grid.width / 2, 0);
+		break;
+	case 7:
+		newBlock = new BlockType7(grid.width / 2, 0);
+		shadowBlock = new BlockType7(grid.width / 2, 0);
 		break;
 	default:
 		break;

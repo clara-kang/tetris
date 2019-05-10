@@ -52,3 +52,61 @@ private:
 	static const cell_t cell_180;
 	static const cell_t cell_270;
 };
+
+// inverse Z shaped block
+class BlockType3 : public Block {
+public:
+	BlockType3(int x, int y);
+	void rotateCw();
+	void rotateCcw();
+private:
+	static const cell_t cell_0;
+	static const cell_t cell_90;
+};
+
+// Z shaped block
+class BlockType4 : public Block {
+public:
+	BlockType4(int x, int y);
+	void rotateCw();
+	void rotateCcw();
+private:
+	static const cell_t cell_0;
+	static const cell_t cell_90;
+};
+
+// inverse L shaped block
+class BlockType5 : public Block {
+public:
+	BlockType5(int x, int y);
+	void rotateCw();
+	void rotateCcw();
+private:
+	static const cell_t cell_0;
+	static const cell_t cell_90;
+	static const cell_t cell_180;
+	static const cell_t cell_270;
+};
+
+// L shaped block
+class BlockType6 : public Block {
+public:
+	BlockType6(int x, int y);
+	void rotateCw();
+	void rotateCcw();
+private:
+	static const cell_t cell_0;
+	static const cell_t cell_90;
+	static const cell_t cell_180;
+	static const cell_t cell_270;
+};
+
+// square block
+class BlockType7 : public Block {
+public:
+	BlockType7(int x, int y);
+	void rotateCw();
+	void rotateCcw();
+private:
+	static const cell_t cell_0;
+};

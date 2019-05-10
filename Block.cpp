@@ -63,6 +63,24 @@ const array<array<int, 2>, 4> BlockType2::cell_90 = { { { { 0, 0 } },{ { 0, -1 }
 const array<array<int, 2>, 4> BlockType2::cell_180 = { { { { 0, 0 } },{ { -1, 0 } },{ { 1, 0 } },{ { 0, 1 } } } };
 const array<array<int, 2>, 4> BlockType2::cell_270 = { { { { 0, 0 } },{ { 0, -1 } },{ { -1, 0 } },{ { 0, 1 } } } };
 
+const array<array<int, 2>, 4> BlockType3::cell_0 = { { { { 0, 0 } },{ { 1, 0 } },{ { 0, 1 } },{ { -1, 1 } } } };
+const array<array<int, 2>, 4> BlockType3::cell_90 = { { { { 0, 0 } },{ { 0, 1 } },{ { 1, 1 } },{ { 1, 2 } } } };
+
+const array<array<int, 2>, 4> BlockType4::cell_0 = { { { { 0, 0 } },{ { -1, 0 } },{ { 0, 1 } },{ { 1, 1 } } } };
+const array<array<int, 2>, 4> BlockType4::cell_90 = { { { { 0, 0 } },{ { 0, 1 } },{ { -1, 1 } },{ { -1, 2 } } } };
+
+const array<array<int, 2>, 4> BlockType5::cell_0 = { { { { 0, 0 } },{ { 1, 0 } },{ { 0, 1 } },{ { 0, 2 } } } };
+const array<array<int, 2>, 4> BlockType5::cell_90 = { { { { 0, 0 } },{ { -1, 0 } },{ { -2, 0 } },{ { 0, 1 } } } };
+const array<array<int, 2>, 4> BlockType5::cell_180 = { { { { 0, 0 } },{ { 0, 1 } },{ { 0, 2 } },{ { -1, 2 } } } };
+const array<array<int, 2>, 4> BlockType5::cell_270 = { { { { 0, 1 } },{ { -1, 1 } },{ { -2, 1 } },{ { -2, 0 } } } };
+
+const array<array<int, 2>, 4> BlockType6::cell_0 = { { { { 0, 0 } },{ { -1, 0 } },{ { 0, 1 } },{ { 0, 2 } } } };
+const array<array<int, 2>, 4> BlockType6::cell_90 = { { { { 0, 0 } },{ { 0, 1 } },{ { -1, 1 } },{ { -2, 1 } } } };
+const array<array<int, 2>, 4> BlockType6::cell_180 = { { { { 0, 0 } },{ { 0, 1 } },{ { 0, 2 } },{ { 1, 2 } } } };
+const array<array<int, 2>, 4> BlockType6::cell_270 = { { { { 0, 0 } },{ { 1, 0 } },{ { 2, 0 } },{ { 0, 1 } } } };
+
+const array<array<int, 2>, 4> BlockType7::cell_0 = { { { { 0, 0 } },{ { 1, 0 } },{ { 1, 1 } },{ { 0, 1 } } } };
+
 BlockType1::BlockType1(int x, int y) : Block(x, y) {
 	cells = &cell_0;
 }
@@ -71,28 +89,25 @@ BlockType2::BlockType2(int x, int y) : Block(x, y) {
 	cells = &cell_0;
 }
 
-void BlockType1::rotateCw() {
-	angle = (angle + 90) % 360;
-	if (angle == 0 || angle == 180) {
-		cells =&cell_0;
-	}
-	else {
-		cells = &cell_90;
-	}
+BlockType3::BlockType3(int x, int y) : Block(x, y) {
+	cells = &cell_0;
 }
 
-void BlockType1::rotateCcw() {
-	angle = (angle + 270) % 360;
-	if (angle == 0 || angle == 180) {
-		cells = &cell_0;
-	}
-	else {
-		cells = &cell_90;
-	}
+BlockType4::BlockType4(int x, int y) : Block(x, y) {
+	cells = &cell_0;
+}
+BlockType5::BlockType5(int x, int y) : Block(x, y) {
+	cells = &cell_0;
+}
+BlockType6::BlockType6(int x, int y) : Block(x, y) {
+	cells = &cell_0;
+}
+BlockType7::BlockType7(int x, int y) : Block(x, y) {
+	cells = &cell_0;
 }
 
 // take the reference of cells pointer to change what it points to
-void rotate_helper(int angle, const cell_t *&cells, const cell_t &cell_0, 
+void rotate_helper(int angle, const cell_t *&cells, const cell_t &cell_0,
 	const cell_t &cell_90, const cell_t &cell_180, const cell_t &cell_270) {
 	switch (angle)
 	{
@@ -114,6 +129,45 @@ void rotate_helper(int angle, const cell_t *&cells, const cell_t &cell_0,
 	}
 }
 
+void rotate_helper(int angle, const cell_t *&cells, const cell_t &cell_0, const cell_t &cell_90) {
+	if (angle == 0 || angle == 180) {
+		cells = &cell_0;
+	}
+	else {
+		cells = &cell_90;
+	}
+}
+
+void BlockType1::rotateCw() {
+	angle = (angle + 90) % 360;
+	rotate_helper(angle, cells, cell_0, cell_90);
+}
+
+void BlockType1::rotateCcw() {
+	angle = (angle + 270) % 360;
+	rotate_helper(angle, cells, cell_0, cell_90);
+}
+
+void BlockType3::rotateCw() {
+	angle = (angle + 90) % 360;
+	rotate_helper(angle, cells, cell_0, cell_90);
+}
+
+void BlockType3::rotateCcw() {
+	angle = (angle + 270) % 360;
+	rotate_helper(angle, cells, cell_0, cell_90);
+}
+
+void BlockType4::rotateCw() {
+	angle = (angle + 90) % 360;
+	rotate_helper(angle, cells, cell_0, cell_90);
+}
+
+void BlockType4::rotateCcw() {
+	angle = (angle + 270) % 360;
+	rotate_helper(angle, cells, cell_0, cell_90);
+}
+
 void BlockType2::rotateCw() {
 	angle = (angle + 90) % 360;
 	rotate_helper(angle, cells, cell_0, cell_90, cell_180, cell_270);
@@ -123,5 +177,33 @@ void BlockType2::rotateCcw() {
 	angle = (angle + 270) % 360;
 	rotate_helper(angle, cells, cell_0, cell_90, cell_180, cell_270);
 }
+
+void BlockType5::rotateCw() {
+	angle = (angle + 90) % 360;
+	rotate_helper(angle, cells, cell_0, cell_90, cell_180, cell_270);
+}
+
+void BlockType5::rotateCcw() {
+	angle = (angle + 270) % 360;
+	rotate_helper(angle, cells, cell_0, cell_90, cell_180, cell_270);
+}
+
+void BlockType6::rotateCw() {
+	angle = (angle + 90) % 360;
+	rotate_helper(angle, cells, cell_0, cell_90, cell_180, cell_270);
+}
+
+void BlockType6::rotateCcw() {
+	angle = (angle + 270) % 360;
+	rotate_helper(angle, cells, cell_0, cell_90, cell_180, cell_270);
+}
+
+void BlockType7::rotateCw() {
+}
+
+void BlockType7::rotateCcw() {
+}
+
+
 
 
