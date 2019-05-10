@@ -19,13 +19,18 @@ const std::vector<std::vector<bool>>(&Grid::getGrid() const) {
 	return grid;
 }
 
-bool Grid::reachedBottom(const Block &block) {
+int Grid::getGroundY(const Block& block) {
 	auto cells = block.getCells();
-	array<array<int, 2>, 4> cells_n = *cells;
-	for (int i = 0; i < 4; i++) {
-		cells_n[i][1] += 1;
+	int ground_y = height - 1;
+	int free_col = 0;
+	int fall_dist = 0;
+	while (!collide(*cells)) {
+		for (int i = 0; i < 4; i++) {
+			(*cells)[i][1] += 1;
+		}
+		fall_dist += 1;
 	}
-	return collide(cells_n);
+	return block.getY() + fall_dist - 1;
 }
 
 bool Grid::collide(const Block& block) {

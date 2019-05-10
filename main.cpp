@@ -13,7 +13,9 @@ const int cell_h = win_h / grid_h;
 using namespace std;
 
 int level = 1;
-BlockType2 *newBlock = new BlockType2(grid_w / 2, 0);
+int ground_y = 0;
+Block *newBlock;
+Block *shadowBlock;
 Grid grid(grid_w, grid_h);
 
 float getLevelRate(int level) {
@@ -42,6 +44,16 @@ void drawGridLines(sf::RenderWindow &window) {
 	}
 }
 
+void drawShadowCell(sf::RenderWindow &window, int x, int y) {
+	float l_thckns = 2.f;
+	sf::RectangleShape shape(sf::Vector2f(cell_w - 2.f * l_thckns, cell_h - 2.f * l_thckns));
+	shape.setFillColor(sf::Color::Transparent);
+	shape.setOutlineColor(sf::Color::Green);
+	shape.setOutlineThickness(l_thckns);
+	shape.setPosition(x * cell_w + l_thckns, y * cell_h + l_thckns);
+	window.draw(shape);
+}
+
 void drawCell(sf::RenderWindow &window, int x, int y) {
 	sf::RectangleShape shape(sf::Vector2f(cell_w, cell_h));
 	shape.setFillColor(sf::Color::Green);
@@ -58,6 +70,15 @@ void drawBlock(sf::RenderWindow &window, Block &block) {
 	}
 }
 
+void drawShadowBlock(sf::RenderWindow &window, Block &block) {
+	auto cells = block.getCells();
+	array<int, 2> block_pos = block.getPos();
+	for (int i = 0; i < 4; i++) {
+		array<int, 2> cell = (*cells)[i];
+		drawShadowCell(window, cell[0], cell[1]);
+	}
+}
+
 void drawGrid(sf::RenderWindow &window, Grid &grid) {
 	auto &grid_fills = grid.getGrid();
 	for (int i = 0; i < grid_w; i++) {
@@ -68,6 +89,34 @@ void drawGrid(sf::RenderWindow &window, Grid &grid) {
 		}
 	}
 }
+
+void generateNewBlock() {
+	int block_type = 1 + rand() % 2;
+	cout << "block_type: " << block_type << endl;
+	switch (block_type)
+	{
+	case 1:
+		newBlock = new BlockType1(grid.width / 2, 0);
+		shadowBlock = new BlockType1(grid.width / 2, 0);
+		break;
+	case 2:
+		newBlock = new BlockType2(grid.width / 2, 0);
+		shadowBlock = new BlockType2(grid.width / 2, 0);
+		break;
+	default:
+		break;
+	}
+}
+
+// transfer block cells positions to grid, remove block, create new block
+void blockToGrid() {
+	grid.fillGrid(*newBlock);
+	grid.clearRow();
+	delete newBlock;
+	delete shadowBlock;
+	generateNewBlock();
+}
+
 
 void pollEvent(sf::RenderWindow &window) {
 	sf::Event event;
@@ -82,6 +131,9 @@ void pollEvent(sf::RenderWindow &window) {
 				if (grid.collide(*newBlock)) {
 					newBlock->rotateCcw();
 				}
+				else {
+					shadowBlock->rotateCw();
+				}
 			}
 			else if (event.key.code == sf::Keyboard::Left) {
 				newBlock->moveLeft();
@@ -95,6 +147,12 @@ void pollEvent(sf::RenderWindow &window) {
 					newBlock->moveLeft();
 				}
 			}
+			else if (event.key.code == sf::Keyboard::Space) {
+				swap(newBlock, shadowBlock);
+				blockToGrid();
+			}
+			ground_y = grid.getGroundY(*newBlock);
+			shadowBlock->setPos(newBlock->getX(), ground_y);
 		}
 	}
 }
@@ -105,6 +163,11 @@ int main()
 	
 	sf::Clock clock;
 	sf::Time elapsed;
+	
+	generateNewBlock();
+
+	ground_y = grid.getGroundY(*newBlock);
+	shadowBlock->setPos(newBlock->getX(), ground_y);
 
 	bool reachedBottom = false;
 	while (window.isOpen()) {
@@ -112,17 +175,16 @@ int main()
 		elapsed = clock.getElapsedTime();
 		if (elapsed.asSeconds() >= getLevelRate(level)) {
 			newBlock->moveDown();
+			// reach ground
 			if (grid.collide(*newBlock)) {
 				newBlock->moveUp();
-				grid.fillGrid(*newBlock);
-				grid.clearRow();
-				delete newBlock;
-				newBlock = new BlockType2(grid.width / 2, 0);
+				blockToGrid();
 			};
 			clock.restart();
 		}
 		window.clear();
 		drawBlock(window, *newBlock);
+		drawShadowBlock(window, *shadowBlock);
 		drawGrid(window, grid);
 		drawGridLines(window);
 		window.display();

@@ -10,6 +10,14 @@ Block::Block(int x, int y) :
 
 }
 
+int Block::getX() const {
+	return pos[0];
+}
+
+int Block::getY() const{
+	return pos[1];
+}
+
 void Block::setPos(int x, int y) {
 	pos[0] = x;
 	pos[1] = y;

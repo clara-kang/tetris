@@ -16,7 +16,9 @@ public:
 	void moveDown();
 	void moveUp();
 	array<int, 2> (&getPos() const);
-	unique_ptr<array<array<int, 2>, 4 >>getCells() const;
+	int getX() const;
+	int getY() const;
+	unique_ptr<cell_t>getCells() const;
 	virtual void rotateCw() = 0;
 	virtual void rotateCcw() = 0;
 	
