@@ -8,14 +8,27 @@ array<int, 2> operator+(const array<int, 2>& lhs, const array<int, 2>& rhs) {
 	return{ { lhs[0] + rhs[0], lhs[1] + rhs[1] } };
 }
 
+bool operator>(const vector<int>& lhs, const vector<int>& rhs) {
+	bool result = true;
+	if (lhs.size() != rhs.size()) {
+		return false;
+	}
+	vector<int>::const_iterator lit = lhs.begin();
+	vector<int>::const_iterator rit = rhs.begin();
+	for (; lit != lhs.end(); ++lit, ++rit) {
+		result = result && (*lit) > (*rit);
+	}
+	return result;
+}
+
 void Grid::resetGrid() {
-	std::vector<bool> row(width, false);
+	std::vector<int> row(width, 0);
 	for (int i = 0; i < height; i++) {
 		grid.push_back(row);
 	}
 }
 
-const std::vector<std::vector<bool>>(&Grid::getGrid() const) {
+const grid_t (&Grid::getGrid() const) {
 	return grid;
 }
 
@@ -38,7 +51,7 @@ bool Grid::collide(const Block& block) {
 	return collide(*cells);
 }
 
-bool Grid::collide(const array<array<int, 2>, 4> cells) {
+bool Grid::collide(const cell_t cells) {
 	for (int i = 0; i < 4; i++) {
 		array<int, 2> cell = cells[i];
 		if (cell[1] >= height || cell[1] < 0 || cell[0] >= width || cell[0] < 0) {
@@ -51,26 +64,28 @@ bool Grid::collide(const array<array<int, 2>, 4> cells) {
 	return false;
 }
 
-void Grid::fillGrid(const Block& block) {
+void Grid::fillGrid(const Block& block, int block_type) {
 	auto cells = block.getCells();
 	for (array<int, 2> cell : *cells) {
-		grid[cell[1]][cell[0]] = true;
+		grid[cell[1]][cell[0]] = block_type;
 	}
 }
 
-void Grid::clearRow() {
-	vector<bool> true_v = vector<bool>(width, true);
-	vector<bool> false_v = vector<bool>(width, false);
+int Grid::clearRow() {
+	vector<int> false_v = vector<int>(width, 0);
+	int rows_cleared = 0;
 	for (int i = 0; i < height; i++) {
-		if (grid[i] == true_v) {
+		if (grid[i] > false_v) {
 			cout << "clear row : " << i << endl;
+			rows_cleared++;
 			grid.erase(grid.begin() + i);
 			grid.insert(grid.begin(), false_v);
 		}
 	}
+	return rows_cleared;
 }
 
 void Grid::clearGrid() {
-	grid = std::vector<std::vector<bool>>();
+	grid = grid_t();
 	resetGrid();
 }

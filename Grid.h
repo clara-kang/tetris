@@ -8,6 +8,8 @@
 #define _GRID_H
 
 array<int, 2> operator+(const array<int, 2>& lhs, const array<int, 2>& rhs);
+bool operator>(const vector<int>& lhs, const vector<int>& rhs);
+typedef std::vector<std::vector<int>> grid_t;
 
 class Grid {
 public:
@@ -15,15 +17,15 @@ public:
 	const int width;
 	const int height;
 	bool collide(const Block& block);
-	void fillGrid(const Block& block);
-	const std::vector<std::vector<bool>>(&getGrid() const);
+	void fillGrid(const Block& block, int block_type);
+	const grid_t(&getGrid() const);
 	int getGroundY(const Block& block);
-	void clearRow();
+	int clearRow();
 	void clearGrid();
 private:
-	bool collide(const array<array<int, 2>, 4> cells);
+	bool collide(const cell_t cells);
 	void resetGrid();
-	std::vector<std::vector<bool>> grid;
+	grid_t grid;
 };
 
 #endif 

@@ -14,26 +14,33 @@ const int button_x = 115;
 const int button_y = 300;
 const int button_w = 70;
 const int button_h = 30;
+const int score_w = 100;
+const int score_h = 50;
+const int level_time = 60; // time in secs in one level
+
 using namespace std;
 
 int level = 1;
+int block_type = 0;
 int ground_y = 0;
+int rows_cleared = 0;
+float rate = 0; // time between block check
 bool gameover = true;
+array<sf::Color, 7> block_colors;
 Block *newBlock;
 Block *shadowBlock;
 Grid grid(grid_w, grid_h);
+sf::Font font;
 
 float getLevelRate(int level) {
-	return 0.5f * level;
+	return 0.5f / level;
 }
 
 void drawGridLines(sf::RenderWindow &window) {
-	const int win_w = window.getSize().x;
-	const int win_h = window.getSize().y;
 	int cell_w = win_w / grid_w;
 	int cell_h = win_h / grid_h;
 
-	for (int i = 0; i < grid_w; i++) {
+	for (int i = 0; i < grid_w + 1; i++) {
 		sf::Vertex vertical_line[] = { 
 			sf::Vertex(sf::Vector2f(cell_w * i, 0.f)), 
 			sf::Vertex(sf::Vector2f(cell_w * i, win_h))
@@ -49,19 +56,19 @@ void drawGridLines(sf::RenderWindow &window) {
 	}
 }
 
-void drawShadowCell(sf::RenderWindow &window, int x, int y) {
+void drawShadowCell(sf::RenderWindow &window, int x, int y, const sf::Color &color) {
 	float l_thckns = 2.f;
-	sf::RectangleShape shape(sf::Vector2f(cell_w - 2.f * l_thckns, cell_h - 2.f * l_thckns));
+	sf::RectangleShape shape(sf::Vector2f(cell_w - 2.f * l_thckns - 1.f, cell_h - 2.f * l_thckns - 1.f));
 	shape.setFillColor(sf::Color::Transparent);
-	shape.setOutlineColor(sf::Color::Green);
+	shape.setOutlineColor(color);
 	shape.setOutlineThickness(l_thckns);
-	shape.setPosition(x * cell_w + l_thckns, y * cell_h + l_thckns);
+	shape.setPosition(x * cell_w + l_thckns, y * cell_h + l_thckns + 1);
 	window.draw(shape);
 }
 
-void drawCell(sf::RenderWindow &window, int x, int y) {
+void drawCell(sf::RenderWindow &window, int x, int y, const sf::Color &color) {
 	sf::RectangleShape shape(sf::Vector2f(cell_w, cell_h));
-	shape.setFillColor(sf::Color::Green);
+	shape.setFillColor(color);
 	shape.setPosition(x * cell_w, y * cell_h);
 	window.draw(shape);
 }
@@ -71,7 +78,7 @@ void drawBlock(sf::RenderWindow &window, Block &block) {
 	array<int, 2> block_pos = block.getPos();
 	for (int i = 0; i < 4; i++) {
 		array<int, 2> cell = (*cells)[i];
-		drawCell(window, cell[0], cell[1]);
+		drawCell(window, cell[0], cell[1], block_colors[block_type-1]);
 	}
 }
 
@@ -80,7 +87,7 @@ void drawShadowBlock(sf::RenderWindow &window, Block &block) {
 	array<int, 2> block_pos = block.getPos();
 	for (int i = 0; i < 4; i++) {
 		array<int, 2> cell = (*cells)[i];
-		drawShadowCell(window, cell[0], cell[1]);
+		drawShadowCell(window, cell[0], cell[1], block_colors[block_type - 1]);
 	}
 }
 
@@ -89,18 +96,18 @@ void drawGrid(sf::RenderWindow &window, Grid &grid) {
 	for (int i = 0; i < grid_w; i++) {
 		for (int j = 0; j < grid_h; j++) {
 			if (grid_fills[j][i]) {
-				drawCell(window, i, j);
+				drawCell(window, i, j, block_colors[grid_fills[j][i] - 1]);
 			}
 		}
 	}
 }
 
 void drawButton(sf::RenderWindow &window, string words) {
-	sf::Text text;
-	text.setString("PLAYAGAIN");
+	sf::Text text("PLAY", font);
 	text.setCharacterSize(24);
 	text.setFillColor(sf::Color::White);
 	text.setStyle(sf::Text::Bold);
+	text.setPosition(button_x, button_y);
 
 	sf::RectangleShape shape(sf::Vector2f(button_w, button_h));
 	shape.setFillColor(sf::Color::Transparent);
@@ -109,14 +116,41 @@ void drawButton(sf::RenderWindow &window, string words) {
 	shape.setPosition(button_x, button_y);
 	window.draw(shape);
 	window.draw(text);
-
 }
 
-int block_type = 0;
+void drawScoreBoard(sf::RenderWindow &window) {
+	sf::Text text("Score:" + to_string(rows_cleared), font);
+	text.setCharacterSize(24);
+	text.setFillColor(sf::Color::White);
+	text.setStyle(sf::Text::Bold);
+	text.setPosition(win_w + 55.f, win_h / 2. - 50.f);
+
+	sf::RectangleShape shape(sf::Vector2f(score_w, score_h));
+	shape.setFillColor(sf::Color::Transparent);
+	shape.setOutlineColor(sf::Color::White);
+	shape.setOutlineThickness(2.f);
+	shape.setPosition(win_w + 50.f, win_h / 2. - 50.f);
+	window.draw(shape);
+	window.draw(text);
+}
+void drawLevelBoard(sf::RenderWindow &window) {
+	sf::Text text("Level:" + to_string(level), font);
+	text.setCharacterSize(24);
+	text.setFillColor(sf::Color::White);
+	text.setStyle(sf::Text::Bold);
+	text.setPosition(win_w + 55.f, win_h / 2. - 50.f - score_h * 2.f);
+
+	sf::RectangleShape shape(sf::Vector2f(score_w, score_h));
+	shape.setFillColor(sf::Color::Transparent);
+	shape.setOutlineColor(sf::Color::White);
+	shape.setOutlineThickness(2.f);
+	shape.setPosition(win_w + 50.f, win_h / 2. - 50.f - score_h * 2.f);
+	window.draw(shape);
+	window.draw(text);
+}
 
 void generateNewBlock() {
-	//int block_type = 1 + rand() % 7;
-	block_type = (block_type) % 7 + 1;
+	block_type = 1 + rand() % 7;
 	cout << "block_type: " << block_type << endl;
 	switch (block_type)
 	{
@@ -151,19 +185,29 @@ void generateNewBlock() {
 	default:
 		break;
 	}
+	ground_y = grid.getGroundY(*newBlock);
+	shadowBlock->setPos(newBlock->getX(), ground_y);
+}
+
+void resetStats() {
+	level = 1;
+	rate = getLevelRate(level);
+	rows_cleared = 0;
 }
 
 // transfer block cells positions to grid, remove block, create new block
 void blockToGrid() {
-	grid.fillGrid(*newBlock);
-	grid.clearRow();
+	grid.fillGrid(*newBlock, block_type);
+	rows_cleared += grid.clearRow();
 	delete newBlock;
 	delete shadowBlock;
 	generateNewBlock();
+	rate = getLevelRate(level);
 	// grid overflow, game over
 	if (grid.collide(*newBlock)) {
  		cout << "game over!" << endl;
 		gameover = true;
+		resetStats();
 	}
 }
 
@@ -182,8 +226,6 @@ void pollStandbyEvent(sf::RenderWindow &window) {
 				position.y >= button_y && position.y <= button_y + button_h) {
 				grid.clearGrid();
 				generateNewBlock();
-				ground_y = grid.getGroundY(*newBlock);
-				shadowBlock->setPos(newBlock->getX(), ground_y);
 				gameover = false;
 			}
 		}
@@ -196,7 +238,6 @@ void pollEvent(sf::RenderWindow &window) {
 		if (event.type == sf::Event::Closed)
 			window.close();
 		else if (event.type == sf::Event::KeyPressed) {
-			cout << "key pressed" << endl;
 			if (event.key.code == sf::Keyboard::R) {
 				newBlock->rotateCw();
 				if (grid.collide(*newBlock)) {
@@ -222,42 +263,68 @@ void pollEvent(sf::RenderWindow &window) {
 				swap(newBlock, shadowBlock);
 				blockToGrid();
 			}
+			else if (event.key.code == sf::Keyboard::Down) {
+				rate = getLevelRate(level) / 2.f;
+			}
 			ground_y = grid.getGroundY(*newBlock);
 			shadowBlock->setPos(newBlock->getX(), ground_y);
+		}
+		else if (event.type == sf::Event::KeyReleased) {
+			if (event.key.code == sf::Keyboard::Down) {
+				cout << "down key released" << endl;
+				rate = getLevelRate(level);
+			}
 		}
 	}
 }
 
 int main()
 {
-	sf::RenderWindow window(sf::VideoMode(win_w, win_h), "SFML works!");
+	sf::RenderWindow window(sf::VideoMode(win_w + 200, win_h), "SFML works!");
 	
-	sf::Clock clock;
-	sf::Time elapsed;
-	
-	generateNewBlock();
+	sf::Clock block_clock;
+	sf::Clock level_clock;
+	sf::Time block_elapsed;
+	sf::Time level_elapsed;
 
+	if (!font.loadFromFile("../fonts/Gula_FREE.ttf")) {
+		throw exception("cannot read font");
+	}
+
+	generateNewBlock();
+	rate = getLevelRate(level);
 	ground_y = grid.getGroundY(*newBlock);
 	shadowBlock->setPos(newBlock->getX(), ground_y);
+
+	block_colors = { {sf::Color(244, 161, 66), sf::Color(119, 171, 255), sf::Color(255, 124, 119),
+		sf::Color(244, 236, 78), sf::Color(167, 231, 239), sf::Color(188, 155, 255), sf::Color(255, 181, 237)} };
 
 	while (window.isOpen()) {
 		if (!gameover) {
 			pollEvent(window);
-			elapsed = clock.getElapsedTime();
-			if (elapsed.asSeconds() >= getLevelRate(level)) {
+			block_elapsed = block_clock.getElapsedTime();
+			level_elapsed = level_clock.getElapsedTime();
+			if (block_elapsed.asSeconds() >= rate) {
 				newBlock->moveDown();
 				// reach ground
 				if (grid.collide(*newBlock)) {
-					newBlock->moveUp();
+ 					newBlock->moveUp();
 					blockToGrid();
 				};
-				clock.restart();
+				block_clock.restart();
+			}
+			if (level_elapsed.asSeconds() >= level_time) {
+				level += 1;
+				rate = getLevelRate(level);
+				level_clock.restart();
 			}
 			window.clear();
 			drawBlock(window, *newBlock);
 			drawShadowBlock(window, *shadowBlock);
 			drawGrid(window, grid);
 			drawGridLines(window);
+			drawScoreBoard(window);
+			drawLevelBoard(window);
 			window.display();
 		}
 		else {
